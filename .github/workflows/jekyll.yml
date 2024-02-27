@@ -1,35 +1,24 @@
-name: Testing the GitHub Pages publication
-
 on:
-  push
-
+  push:
+    branches:
+      - master
 jobs:
-  jekyll:
+  gh-pages-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
-    # Use GitHub Actions' cache to shorten build times and decrease load on servers
-    - uses: actions/cache@v2
+    - name: Set up Ruby
+      uses: actions/setup-ruby@v1
       with:
-        path: vendor/bundle
-        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile') }}
-        restore-keys: |
-          ${{ runner.os }}-gems-
-
-    # Standard usage
-    - uses:  Cutwell/jekyll-build-action@v1
+        ruby-version: 2.7
+    - name: bundle install
+      run: |
+        bundle config set path 'vendor/bundle'
+        bundle install
+    - name: Jekyll Build
+      run: bundle exec jekyll build
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-
-    # Specify the Jekyll source location as a parameter
-    - uses: Cutwell/jekyll-build-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        jekyll_src: 'jekyll-garden'
-
-    # Specify the target branch (optional)
-    - uses: Cutwell/jekyll-build-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        target_branch: 'gh-pages'
+        personal_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
